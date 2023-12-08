@@ -2,7 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:taba/domain/perfume/perfume.dart';
-import 'package:taba/domain/perfume/perfume_provider.dart';
+import 'package:taba/domain/perfume/perfume_list_provider.dart';
 import 'package:taba/modules/orb/components/components.dart';
 import 'package:taba/routes/router_provider.dart';
 
@@ -90,7 +90,7 @@ class _HomeScreen extends ConsumerState {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: perfumeList.when(
-                data: (perfumeList) => perfumeList.totalElements,
+                data: (perfumeList) => perfumeList.size,
                 loading: () => 10,
                 error: (error, stackTrace) => 10,
               ),

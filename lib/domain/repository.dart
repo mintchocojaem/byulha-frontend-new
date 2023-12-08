@@ -1,32 +1,18 @@
 // repository.dart
+import 'package:image_picker/image_picker.dart';
 import 'package:taba/domain/perfume/perfume.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../utils/dio_provider.dart';
 import 'auth/login/login.dart';
 
-final repositoryProvider = Provider<Repository>((ref) => Repository());
-/*
-class Repository {
-  final Dio _dio = Dio();
-
-  Future<PerfumeList> getPerfumeList() async {
-    final response = await _dio.get(
-      'https://byulha.life/api/perfume?page=0&size=20',
-      options: Options(
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
-    await Future.delayed(Duration(seconds: 2));
-    return PerfumeList.fromJson(response.data);
-  }
-}
-
- */
-
+final repositoryProvider = Provider<Repository>((ref) => Repository(ref.read(dioProvider)));
 
 class Repository {
-  final Dio _dio = Dio();
+
+  final Dio _dio;
+  Repository(this._dio);
 
   Future<String> getSignupToken() async {
     final response = await _dio.get('/user/signup-token');
@@ -96,15 +82,38 @@ class Repository {
 
   Future<PerfumeList> getPerfumeList(int page, int size) async {
     final response = await _dio.get(
-      'https://byulha.life/api/perfume?page=$page&size=$size&sort=rating,desc',
-      options: Options(
-        headers: {'Content-Type': 'application/json'},
-      ),
+      '/perfume?page=$page&size=$size&sort=rating,desc',
     );
     if (response.statusCode == 200) {
       return PerfumeList.fromJson(response.data);
     } else {
       throw Exception('Failed to load perfumes');
     }
+  }
+
+  Future<PerfumeList> getRecommendedPerfumeList(List<XFile> images) async{
+    final files = images.map((e) => MultipartFile.fromFileSync(
+      e.path,
+    )).toList();
+    final response = await _dio.post(
+      '/user/upload/image-test?page=0&size=20',
+      data: FormData.fromMap({
+        'images': files,
+      }),
+      options: Options(
+        contentType: 'multipart/form-data',
+        headers: {
+          'Authorization' : 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyUm9sZSI6IlJPTEVfVVNFUiIsImV4cCI6MTcwMjAyNTgzMCwidXNlcklkIjoiMTYiLCJpYXQiOjE3MDIwMjQwMzB9.LHie2HLaecnxY8JYff_-Z7l2VlN-cxHzG16qXUCizNA'
+        },
+      ),
+    );
+    return PerfumeList.fromJson(response.data);
+  }
+
+  Future<PerfumeDetail> getPerfumeDetail(int id) async{
+    final response = await _dio.post(
+      '/perfume/$id',
+    );
+    return PerfumeDetail.fromJson(response.data);
   }
 }
